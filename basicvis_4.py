@@ -4,41 +4,42 @@ import matplotlib
 import numpy as np
 import matplotlib.pyplot as plt
 
-def makeHistogram(x, numBins, xLabel, yLabel, genTitle):
-    plt.hist(x, bins=[1,2,3,4,5,6], ec='black')
+# kind of a bar chart, but histogram nonetheless
+def makeHistogram(occurences, xLabel, yLabel, genTitle):
+    labels, counts = np.unique(occurences, return_counts=True)
+
+    plt.bar(labels, counts)
     plt.xlabel(xLabel)
     plt.ylabel(yLabel)
     plt.title(genTitle)
     plt.show()
 
-if __name__ == '__main__':
+# gets all genre ratings
+# takes the moviedata array, rating data array, and the column in 
+# movie data array that corresposnds to this genre. 
+def getGenreRatings(moviedata_fname, ratingdata_fname, genre_col):
     # get scifi IDs
-    scifi_ID = np.genfromtxt('./data/movies.txt',delimiter='\t',usecols=(0, 17), dtype=None, encoding="ISO-8859-1")
-    scifi_ID = scifi_ID[np.where((scifi_ID[:,1] == 1))]
+    ID = np.genfromtxt(moviedata_fname,delimiter='\t',usecols=(0, genre_col), dtype=None, encoding="ISO-8859-1")
+    ID = ID[np.where((ID[:,1] == 1))]
 
     # get scifi ratings
-    ratings = np.loadtxt('./data/data.txt',delimiter='\t')
-    print(scifi_ID[0][0])
-    print(ratings[0][1])
-    scifi_rating_ID = np.isin(ratings[:, 1], scifi_ID[:, 0])
-    scifi_ratings = ratings[scifi_rating_ID]
-    scifi_ratings = scifi_ratings[:, 2]
-    print(scifi_ratings)
+    ratings = np.loadtxt(ratingdata_fname,delimiter='\t')
+    rating_ID = np.isin(ratings[:, 1], ID[:, 0])
+    genre_ratings = ratings[rating_ID]
+    genre_ratings = genre_ratings[:, 2]
 
-    # show scifi ratings
-    makeHistogram(scifi_ratings, 5, 'Ratings', 'Frequency', 'Frequency of Scifi Ratings')
+    return genre_ratings
 
+if __name__ == '__main__':
+    # get and show scifi ratings
+    scifi_ratings = getGenreRatings('./data/movies.txt', './data/data.txt', 17)
+    makeHistogram(scifi_ratings, 'Ratings', 'Frequency', 'Frequency of Scifi Ratings')
 
-    # romance_ID = np.loadtxt('./data/movies.txt',delimiter='\t',usecols = (0, 16))
-    # romance_ID = romance_id[np.where((romance_ID[1] == 1))]
-    # animation_ID = np.loadtxt('./data/movies.txt',delimiter='\t',usecols = (0, 5))
-    # animation_ID = animation_id[np.where((animation_ID[1] == 1))]
+    romance_ratings = getGenreRatings('./data/movies.txt', './data/data.txt', 16)
+    makeHistogram(romance_ratings, 'Ratings', 'Frequency', 'Frequency of Romance Ratings')
 
-    # User_ID = ratings[:,0]
-    # Movie_ID = ratings[:,1]
-    # Rating = ratings[:,2]
-
-    # labels, counts = np.unique(Rating, return_counts=True)
+    animation_ratings = getGenreRatings('./data/movies.txt', './data/data.txt', 5)
+    makeHistogram(animation_ratings, 'Ratings', 'Frequency', 'Frequency of Animation Ratings')
 
 
 
