@@ -64,7 +64,15 @@ Best_movie_rating = Average_rating[len(Average_rating)-11:len(Average_rating)-1]
 Best_movie_name = []
 for ID in Best_movie_ID:
     Best_movie_name.append(MovieNames[int(ID)-1])
-    
+
+Average_rating_of_popular_movies = []
+
+for ID in Most_popular_movie_ID:
+    for index in range(len(Movie_ID_number)):
+        if Movie_ID_number[index] == ID:
+           Average_rating_of_popular_movies.append(Average_rating[index])
+        
+
 
 fig,ax=plt.subplots()
 plt.bar([1,2,3,4,5,6,7,8,9,10], Best_movie_rating, align='center')
