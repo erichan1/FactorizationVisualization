@@ -1,9 +1,28 @@
-# Solutions for problem 5.1 on project 2 of CS 155
+# Solutions for problem 5.2 on project 2 of CS 155
 # Authors: Eric Han and Eva Scheller
 
 import numpy as np
 import matplotlib.pyplot as plt
 
+# movie_IDs = np array([0, 1,2,3,...]). IDs should be 0 indexed
+# V is the V outputted by matrix factorization algorithm. 
+# Different algorithms output V kinda differently. Standardize to (K, N_movies) shape. 
+# Returns a scatterplot of where these movie_IDs lie on the 2D V projection
+def project_movies_2D(movie_IDs, movie_labels, V):
+    # Write this function!
+    pass
+
+def make_V_scatterproj(V, title):
+    V_T = np.transpose(V)
+    A_v, sigma_v, B_v = np.linalg.svd(V_T)
+
+    # 2D projection of U and V
+    # U_proj = np.matmul(A_u[:,0:2], U)
+    V_proj = np.matmul(np.transpose(A_v[:, 0:2]), V_T)
+
+    make_scatter(V_proj[0], V_proj[1], 'V projection col 1', 'V projection col 2', title)
+
+# makes general scatter plot
 def make_scatter(x, y, xLabel, yLabel, genTitle):
     plt.scatter(x, y)
     plt.xlabel(xLabel)
@@ -144,24 +163,5 @@ if __name__ == '__main__':
     # Use to compute Ein and Eout
     U,V, E_in = train_model(M, N, K, eta, reg, Y_train)
     E_out = get_err(U, V, Y_test)
-    
-    print(E_in, E_out)
 
-    # A_u, sigma_u, B_u = np.linalg.svd(U)
-    V = np.transpose(V)
-    A_v, sigma_v, B_v = np.linalg.svd(V)
-
-    print(A_v.shape, V.shape)
-
-    # 2D projection of U and V
-    # U_proj = np.matmul(A_u[:,0:2], U)
-    V_proj = np.matmul(np.transpose(A_v[:, 0:2]), V)
-    print(len(V_proj[0]), len(V_proj[1]))
-
-    make_scatter(V_proj[0], V_proj[1], 'V col 1', 'V col 2', '2D V Projection of All Movies')
-
-
-    
-
-    
-
+    make_V_scatterproj(V, '2D V Projection of All Movies')
