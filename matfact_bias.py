@@ -4,10 +4,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-# movie_IDs = np.array([0, 1,2,3,...]). Just put in the 1 indexed IDs. I subtract 1 later. 
-# V is a (N movies, K) np array. Outputted by whatever matrix factorization method you use. 
-# title is a string that you put on the entire thing
-def project_movies_2D(V, movie_IDs, title):
+
+'''
+movie_IDs = np.array([0, 1,2,3,...]). Just put in the 1 indexed IDs. I subtract 1 later. 
+V is a (N movies, K) np array. Outputted by whatever matrix factorization method you use. 
+
+'''
+def project_movies_2D(V, movie_IDs):
     V_T = np.transpose(V)
     A_v, sigma_v, B_v = np.linalg.svd(V_T)
 
@@ -20,17 +23,25 @@ def project_movies_2D(V, movie_IDs, title):
     movie_IDs -= 1
     V_proj_specific = V_proj[:, movie_IDs]
 
-    make_scatter(V_proj_specific[0], V_proj_specific[1], 'V projection col 1', 'V projection col 2', title)
+    return (V_proj_specific[0], V_proj_specific[1])
 
-# makes general scatter plot
-def make_scatter(x, y, xLabel, yLabel, genTitle):
-    plt.scatter(x, y)
-    plt.xlabel(xLabel)
-    plt.ylabel(yLabel)
-    plt.title(genTitle)
+# X, Y are np arrays that have x and y positions of the movies
+# movie_titles = np.array(['the godfather', 'star wars',...]). holds titles of movie_IDs.
+# gentitle is a string that you put on the entire thing
+def make_movie_scatter(X, Y, movie_titles, gentitle, has_legend):
+    plt.figure(1)
+    for i in range(len(X)):
+        plt.plot(X[i],Y[i],'o',label=movie_titles[i])
+
+    if(has_legend):
+        plt.legend(loc='')
+
+    plt.xlabel('V projection col 1')
+    plt.ylabel('V projection col 2')
+    plt.title(gentitle)
     plt.show()
 
-def grad_U(Ui, Yij, Vj, reg, eta):
+def grad_U(Ui, Yij, Vj, Ai, Bj, reg, eta):
     """
     Takes as input Ui (the ith row of U), a training point Yij, the column
     vector Vj (jth column of V^T), reg (the regularization parameter lambda),
@@ -40,13 +51,13 @@ def grad_U(Ui, Yij, Vj, reg, eta):
     respect to Ui multiplied by eta.
     """
     reg_term = reg * Ui
-    y_diff = Yij - np.dot(Ui, Vj) 
+    y_diff = Yij - (np.dot(Ui, Vj) + ai + bj)
     grad = reg_term + y_diff * (-1 * Vj)
     grad *= eta
 
     return grad
 
-def grad_V(Vj, Yij, Ui, reg, eta):
+def grad_V(Vj, Yij, Ui, Ai, Bj, reg, eta):
     """
     Takes as input the column vector Vj (jth column of V^T), a training point Yij,
     Ui (the ith row of U), reg (the regularization parameter lambda),
@@ -56,13 +67,13 @@ def grad_V(Vj, Yij, Ui, reg, eta):
     respect to Vj multiplied by eta.
     """
     reg_term = reg * Vj
-    y_diff = Yij - np.dot(Ui, Vj) 
+    y_diff = Yij - (np.dot(Ui, Vj) + ai + bj)
     grad = reg_term + y_diff * (-1 * Ui)
     grad *= eta
 
     return grad
 
-def get_err(U, V, Y, reg=0.0):
+def get_err(U, V, Y, A, B, reg=0.0):
     """
     Takes as input a matrix Y of triples (i, j, Y_ij) where i is the index of a user,
     j is the index of a movie, and Y_ij is user i's rating of movie j and
@@ -75,12 +86,17 @@ def get_err(U, V, Y, reg=0.0):
     reg_term = (reg / 2) * (np.linalg.norm(U, ord='fro')**2 + np.linalg.norm(V, ord='fro')**2)
 
     sq_loss_term = 0
-    for i in range(len(Y)):
-        Y_pt = Y[i][2]
-        U_row = U[Y[i][0]-1]
-        V_col = V[Y[i][1]-1]
+    for k in range(len(Y)):
+        i = Y[k][0]-1
+        j = Y[k][1]-1
+        Y_pt = Y[k][2]
+        
+        U_row = U[i]
+        V_col = V[j]
+        a_i = A[i]
+        b_j = B[j]
 
-        sq_loss_term += (Y_pt - np.dot(U_row, V_col))**2
+        sq_loss_term += (Y_pt - (np.dot(U_row, V_col) + a_i + b_j))**2
     sq_loss_term *= (1/2) 
 
     loss = (reg_term + sq_loss_term) / len(Y)
@@ -124,19 +140,25 @@ def train_model(M, N, K, eta, reg, Y, eps=0.0001, max_epochs=300):
     # didn't implement stopping after improvement decreases under threshold
     U = initMatrix(M, K, [-0.5, 0.5])
     V = initMatrix(N, K, [-0.5, 0.5])
+    A = initMatrix(M, 1, [-0.5, 0.5]) 
+    B = initMatrix(N, 1, [-0.5, 0.5])
 
     err = []
-    err.append(get_err(U, V, Y, reg=reg))
+    err.append(get_err(U, V, Y, A, B reg=reg))
     for i in range(max_epochs):
         print("Epoch {} in max epochs {}".format(i, max_epochs))
         np.random.shuffle(Y) # shuffle the train set before each epoch
         for j in range(len(Y)):
+            row = Y[k][0]-1 # equiv to i, i already exists tho
+            col = Y[k][1]-1 # equiv to j, j already exists tho
             # finds the gradient for this U_row and V_col
             Y_pt = Y[j][2]
-            U_row = U[Y[j][0]-1]
-            V_col = V[Y[j][1]-1]
-            gradU = grad_U(U_row, Y_pt, V_col, reg, eta)
-            gradV = grad_V(V_col, Y_pt, U_row, reg, eta)
+            U_row = U[row]
+            V_col = V[col]
+            Ai = A[row]
+            Bj = B[col]
+            gradU = grad_U(U_row, Y_pt, V_col, Ai, Bj reg, eta)
+            gradV = grad_V(V_col, Y_pt, U_row, Ai, Bj, reg, eta)
 
             U[Y[j][0]-1] -= gradU
             V[Y[j][1]-1] -= gradV
@@ -164,5 +186,13 @@ if __name__ == '__main__':
     U,V, E_in = train_model(M, N, K, eta, reg, Y_train)
     E_out = get_err(U, V, Y_test)
 
-    movie_IDs = np.array([1,2,3,4,5,6,7,8,9, 10])
-    project_movies_2D(V, movie_IDs, '2D V Projection of All Movies')
+    #Plot random 10 movies
+
+    movie_IDs = np.array([127,187,64,172,181,50,59,60,61,89])
+    movie_titles = ['Godfather Part I','Godfather: Part II','Shawshank Redemption',
+        'Empire Strikes Back','Return of the Jedi','Star Wars','Three Colors: Red',
+        'Three Colors:Blue','Three Colors: White','Blade Runner']
+
+    V_X, V_Y = project_movies_2D(V, movie_IDs)
+    make_movie_scatter(V_X, V_Y, movie_titles, '2D V Projection of Ten Movies We Chose', True)
+    make_movie_scatter(V_X, V_Y, movie_titles, '2D V Projection of Ten Movies We Chose', False)

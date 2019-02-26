@@ -4,10 +4,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-# movie_IDs = np.array([0, 1,2,3,...]). Just put in the 1 indexed IDs. I subtract 1 later. 
-# V is a (N movies, K) np array. Outputted by whatever matrix factorization method you use. 
-# title is a string that you put on the entire thing
-def project_movies_2D(V, movie_IDs, title):
+
+'''
+movie_IDs = np.array([0, 1,2,3,...]). Just put in the 1 indexed IDs. I subtract 1 later. 
+V is a (N movies, K) np array. Outputted by whatever matrix factorization method you use. 
+
+'''
+def project_movies_2D(V, movie_IDs):
     V_T = np.transpose(V)
     A_v, sigma_v, B_v = np.linalg.svd(V_T)
 
@@ -20,14 +23,22 @@ def project_movies_2D(V, movie_IDs, title):
     movie_IDs -= 1
     V_proj_specific = V_proj[:, movie_IDs]
 
-    make_scatter(V_proj_specific[0], V_proj_specific[1], 'V projection col 1', 'V projection col 2', title)
+    return (V_proj_specific[0], V_proj_specific[1])
 
-# makes general scatter plot
-def make_scatter(x, y, xLabel, yLabel, genTitle):
-    plt.scatter(x, y)
-    plt.xlabel(xLabel)
-    plt.ylabel(yLabel)
-    plt.title(genTitle)
+# X, Y are np arrays that have x and y positions of the movies
+# movie_titles = np.array(['the godfather', 'star wars',...]). holds titles of movie_IDs.
+# gentitle is a string that you put on the entire thing
+def make_movie_scatter(X, Y, movie_titles, gentitle, has_legend):
+    plt.figure(1)
+    for i in range(len(X)):
+        plt.plot(X[i],Y[i],'o',label=movie_titles[i])
+
+    if(has_legend):
+        plt.legend(loc='')
+
+    plt.xlabel('V projection col 1')
+    plt.ylabel('V projection col 2')
+    plt.title(gentitle)
     plt.show()
 
 def grad_U(Ui, Yij, Vj, reg, eta):
@@ -164,5 +175,35 @@ if __name__ == '__main__':
     U,V, E_in = train_model(M, N, K, eta, reg, Y_train)
     E_out = get_err(U, V, Y_test)
 
-    movie_IDs = np.array([1,2,3,4,5,6,7,8,9, 10])
-    project_movies_2D(V, movie_IDs, '2D V Projection of All Movies')
+    #Plot random 10 movies
+    random_IDs = np.array([127,187,64,172,181,50,59,60,61,89])
+    random_titles = ['Godfather Part I','Godfather: Part II','Shawshank Redemption',
+        'Empire Strikes Back','Return of the Jedi','Star Wars','Three Colors: Red',
+        'Three Colors:Blue','Three Colors: White','Blade Runner']
+
+
+
+    Anime_ID = np.array([1,71,95,99,101,102,103,2,114,169])
+    Anime_names = ['Toy Story','Lion King','Aladdin','Snow White',
+        'Heavy Metal','Aristocats','All Dogs Go to Heaven 2',
+        'Wallace and Gromit','Wrong Trouser','Grand Day Out, A']
+    Scifi_ID = np.array([7,38,39,50,62,82,84,89,96,101])
+    Scifi_names = ['Twelve Monkeys','The Net','Strange Days','Star Wars',
+        'Stargate','Jurassic Park','Robert A Heinleins The Puppet Masters',
+        'Blade Runner','Terminator 2','Heavy Metal']
+    Romance_ID = np.array([14,16,20,33,36,49,50,51,55,66])
+    Romance_names = ['Postino, II','French Twist','Angels and Insects',
+        'Desperado','Mad Love','I.Q.','Star Wars','Legends of the Fall',
+        'Professional, The','While You Were Sleeping']
+
+    # V_X, V_Y = project_movies_2D(V, Anime_ID)
+    # make_movie_scatter(V_X, V_Y, Anime_names, '2D V Projection of Ten Animated Movies', True)
+    # make_movie_scatter(V_X, V_Y, Anime_names, '2D V Projection of Ten Animated Movies', False)
+
+    # V_X, V_Y = project_movies_2D(V, Scifi_ID)
+    # make_movie_scatter(V_X, V_Y, Scifi_names, '2D V Projection of Ten Scifi Movies', True)
+    # make_movie_scatter(V_X, V_Y, Scifi_names, '2D V Projection of Ten Scifi Movies', False)
+
+    # V_X, V_Y = project_movies_2D(V, Romance_ID)
+    # make_movie_scatter(V_X, V_Y, Romance_names, '2D V Projection of Ten Romance Movies', True)
+    # make_movie_scatter(V_X, V_Y, Romance_names, '2D V Projection of Ten Romance Movies', False)
