@@ -4,15 +4,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-# movie_IDs = np array([0, 1,2,3,...]). IDs should be 0 indexed
-# V is the V outputted by matrix factorization algorithm. 
-# Different algorithms output V kinda differently. Standardize to (K, N_movies) shape. 
-# Returns a scatterplot of where these movie_IDs lie on the 2D V projection
-def project_movies_2D(movie_IDs, movie_labels, V):
-    # Write this function!
-    pass
-
-def make_V_scatterproj(V, title):
+# movie_IDs = np.array([0, 1,2,3,...]). Just put in the 1 indexed IDs. I subtract 1 later. 
+# V is a (N movies, K) np array. Outputted by whatever matrix factorization method you use. 
+# title is a string that you put on the entire thing
+def project_movies_2D(V, movie_IDs, title):
     V_T = np.transpose(V)
     A_v, sigma_v, B_v = np.linalg.svd(V_T)
 
@@ -20,7 +15,12 @@ def make_V_scatterproj(V, title):
     # U_proj = np.matmul(A_u[:,0:2], U)
     V_proj = np.matmul(np.transpose(A_v[:, 0:2]), V_T)
 
-    make_scatter(V_proj[0], V_proj[1], 'V projection col 1', 'V projection col 2', title)
+    # take only the columns corresponding to movie ids. 
+    # movie ids are 1 indexed, so subtract by 1. 
+    movie_IDs -= 1
+    V_proj_specific = V_proj[:, movie_IDs]
+
+    make_scatter(V_proj_specific[0], V_proj_specific[1], 'V projection col 1', 'V projection col 2', title)
 
 # makes general scatter plot
 def make_scatter(x, y, xLabel, yLabel, genTitle):
@@ -164,4 +164,5 @@ if __name__ == '__main__':
     U,V, E_in = train_model(M, N, K, eta, reg, Y_train)
     E_out = get_err(U, V, Y_test)
 
-    make_V_scatterproj(V, '2D V Projection of All Movies')
+    movie_IDs = np.array([1,2,3,4,5,6,7,8,9, 10])
+    project_movies_2D(V, movie_IDs, '2D V Projection of All Movies')
