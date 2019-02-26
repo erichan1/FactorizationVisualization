@@ -176,12 +176,34 @@ if __name__ == '__main__':
     E_out = get_err(U, V, Y_test)
 
     #Plot random 10 movies
-
-    movie_IDs = np.array([127,187,64,172,181,50,59,60,61,89])
-    movie_titles = ['Godfather Part I','Godfather: Part II','Shawshank Redemption',
+    random_IDs = np.array([127,187,64,172,181,50,59,60,61,89])
+    random_titles = ['Godfather Part I','Godfather: Part II','Shawshank Redemption',
         'Empire Strikes Back','Return of the Jedi','Star Wars','Three Colors: Red',
         'Three Colors:Blue','Three Colors: White','Blade Runner']
 
-    V_X, V_Y = project_movies_2D(V, movie_IDs)
-    make_movie_scatter(V_X, V_Y, movie_titles, '2D V Projection of Ten Movies We Chose', True)
-    make_movie_scatter(V_X, V_Y, movie_titles, '2D V Projection of Ten Movies We Chose', False)
+
+
+    Anime_ID = np.array([1,71,95,99,101,102,103,2,114,169])
+    Anime_names = ['Toy Story','Lion King','Aladdin','Snow White',
+        'Heavy Metal','Aristocats','All Dogs Go to Heaven 2',
+        'Wallace and Gromit','Wrong Trouser','Grand Day Out, A']
+    Scifi_ID = np.array([7,38,39,50,62,82,84,89,96,101])
+    Scifi_names = ['Twelve Monkeys','The Net','Strange Days','Star Wars',
+        'Stargate','Jurassic Park','Robert A Heinleins The Puppet Masters',
+        'Blade Runner','Terminator 2','Heavy Metal']
+    Romance_ID = np.array([14,16,20,33,36,49,50,51,55,66])
+    Romance_names = ['Postino, II','French Twist','Angels and Insects',
+        'Desperado','Mad Love','I.Q.','Star Wars','Legends of the Fall',
+        'Professional, The','While You Were Sleeping']
+
+    # V_X, V_Y = project_movies_2D(V, Anime_ID)
+    # make_movie_scatter(V_X, V_Y, Anime_names, '2D V Projection of Ten Animated Movies', True)
+    # make_movie_scatter(V_X, V_Y, Anime_names, '2D V Projection of Ten Animated Movies', False)
+
+    # V_X, V_Y = project_movies_2D(V, Scifi_ID)
+    # make_movie_scatter(V_X, V_Y, Scifi_names, '2D V Projection of Ten Scifi Movies', True)
+    # make_movie_scatter(V_X, V_Y, Scifi_names, '2D V Projection of Ten Scifi Movies', False)
+
+    # V_X, V_Y = project_movies_2D(V, Romance_ID)
+    # make_movie_scatter(V_X, V_Y, Romance_names, '2D V Projection of Ten Romance Movies', True)
+    # make_movie_scatter(V_X, V_Y, Romance_names, '2D V Projection of Ten Romance Movies', False)
