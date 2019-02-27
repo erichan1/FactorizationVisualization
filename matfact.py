@@ -175,26 +175,48 @@ if __name__ == '__main__':
     U,V, E_in = train_model(M, N, K, eta, reg, Y_train)
     E_out = get_err(U, V, Y_test)
 
-    #Plot random 10 movies
-    random_IDs = np.array([127,187,64,172,181,50,59,60,61,89])
-    random_titles = ['Godfather Part I','Godfather: Part II','Shawshank Redemption',
-        'Empire Strikes Back','Return of the Jedi','Star Wars','Three Colors: Red',
-        'Three Colors:Blue','Three Colors: White','Blade Runner']
+    print(E_in, E_out)
+
+    # random_IDs = np.array([127,187,64,172,181,50,59,60,61,89])
+    # random_titles = ['Godfather Part I','Godfather: Part II','Shawshank Redemption',
+    #     'Empire Strikes Back','Return of the Jedi','Star Wars','Three Colors: Red',
+    #     'Three Colors:Blue','Three Colors: White','Blade Runner']
+
+    # Anime_ID = np.array([1,71,95,99,101,102,103,2,114,169])
+    # Anime_names = ['Toy Story','Lion King','Aladdin','Snow White',
+    #     'Heavy Metal','Aristocats','All Dogs Go to Heaven 2',
+    #     'Wallace and Gromit','Wrong Trouser','Grand Day Out, A']
+
+    # Scifi_ID = np.array([7,38,39,50,62,82,84,89,96,101])
+    # Scifi_names = ['Twelve Monkeys','The Net','Strange Days','Star Wars',
+    #     'Stargate','Jurassic Park','Robert A Heinleins The Puppet Masters',
+    #     'Blade Runner','Terminator 2','Heavy Metal']
+
+    # Romance_ID = np.array([14,16,20,33,36,49,50,51,55,66])
+    # Romance_names = ['Postino, II','French Twist','Angels and Insects',
+    #     'Desperado','Mad Love','I.Q.','Star Wars','Legends of the Fall',
+    #     'Professional, The','While You Were Sleeping']
 
 
+    popular_ID = np.array([174, 121, 300, 1, 288, 286, 294, 181, 100, 258])
+    popular_titles = ['Raiders of the Lost Ark (1981)', 'Independence Day (ID4) (1996)', 
+        'Air Force One (1997)', 'Toy Story (1995)', 'Scream (1996)', '"English Patient, The (1996)"', 
+        'Liar Liar (1997)', 'Return of the Jedi (1983)', 'Fargo (1996)', 'Contact (1997)']
 
-    Anime_ID = np.array([1,71,95,99,101,102,103,2,114,169])
-    Anime_names = ['Toy Story','Lion King','Aladdin','Snow White',
-        'Heavy Metal','Aristocats','All Dogs Go to Heaven 2',
-        'Wallace and Gromit','Wrong Trouser','Grand Day Out, A']
-    Scifi_ID = np.array([7,38,39,50,62,82,84,89,96,101])
-    Scifi_names = ['Twelve Monkeys','The Net','Strange Days','Star Wars',
-        'Stargate','Jurassic Park','Robert A Heinleins The Puppet Masters',
-        'Blade Runner','Terminator 2','Heavy Metal']
-    Romance_ID = np.array([14,16,20,33,36,49,50,51,55,66])
-    Romance_names = ['Postino, II','French Twist','Angels and Insects',
-        'Desperado','Mad Love','I.Q.','Star Wars','Legends of the Fall',
-        'Professional, The','While You Were Sleeping']
+    best_rated_ID = np.array([1449, 814, 1122, 1189, 1201, 1293, 1467, 1500, 1536, 1599])
+    best_rated_titles = ['Pather Panchali (1955)', '"Great Day in Harlem, A (1994)"', 
+        'They Made Me a Criminal (1939)', 'Prefontaine (1997)', 'Marlene Dietrich: Shadow and Light (1996) ', 
+        'Star Kid (1997)', '"Saint of Fort Washington, The (1993)"', 'Santa with Muscles (1996)', 
+        'Aiqing wansui (1994)', "Someone Else's America (1995)"]
+
+
+    V_X, V_Y = project_movies_2D(V, popular_ID)
+    make_movie_scatter(V_X, V_Y, popular_titles, '2D V Projection of Ten Most Popular Movies', True)
+    make_movie_scatter(V_X, V_Y, popular_titles, '2D V Projection of Ten Most Popular Movies', False)
+
+    V_X, V_Y = project_movies_2D(V, best_rated_ID)
+    make_movie_scatter(V_X, V_Y, best_rated_titles, '2D V Projection of Ten Best Rated Movies', True)
+    make_movie_scatter(V_X, V_Y, best_rated_titles, '2D V Projection of Ten Best Rated Movies', False)
 
     # V_X, V_Y = project_movies_2D(V, Anime_ID)
     # make_movie_scatter(V_X, V_Y, Anime_names, '2D V Projection of Ten Animated Movies', True)
