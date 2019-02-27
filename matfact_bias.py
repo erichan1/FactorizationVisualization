@@ -41,23 +41,41 @@ def make_movie_scatter(X, Y, movie_titles, gentitle, has_legend):
     plt.title(gentitle)
     plt.show()
 
-def grad_U(Ui, Yij, Vj, Ai, Bj, reg, eta):
+def grad_A(Yij, Ui, Vj, Ai, Bj, mu, reg, eta):
+
+    reg_term = reg * Ai
+    y_diff = (Yij - mu) - (np.dot(Ui, Vj) + Ai + Bj)
+    grad_A = reg_term + y_diff * -2
+    grad_A *= eta
+
+    return grad_A
+
+def grad_B(Yij, Ui, Vj, Ai, Bj, mu, reg, eta):
+
+    reg_term = reg * Bj
+    y_diff = (Yij - mu) - (np.dot(Ui, Vj) + Ai + Bj)
+    grad_B = reg_term + y_diff * -2
+    grad_B *= eta
+
+    return grad_B
+
+def grad_U(Yij, Ui, Vj, Ai, Bj, mu, reg, eta):
     """
     Takes as input Ui (the ith row of U), a training point Yij, the column
     vector Vj (jth column of V^T), reg (the regularization parameter lambda),
     and eta (the learning rate).
 
     Returns the gradient of the regularized loss function with
-    respect to Ui multiplied by eta.
+    respect to Ui multiplied by eta. Also returns grad for A
     """
     reg_term = reg * Ui
-    y_diff = Yij - (np.dot(Ui, Vj) + ai + bj)
-    grad = reg_term + y_diff * (-1 * Vj)
-    grad *= eta
+    y_diff = (Yij - mu) - (np.dot(Ui, Vj) + Ai + Bj)
+    grad_U = reg_term + y_diff * (-2 * Vj)
+    grad_U *= eta
 
-    return grad
+    return grad_U
 
-def grad_V(Vj, Yij, Ui, Ai, Bj, reg, eta):
+def grad_V(Yij, Ui, Vj, Ai, Bj, mu, reg, eta):
     """
     Takes as input the column vector Vj (jth column of V^T), a training point Yij,
     Ui (the ith row of U), reg (the regularization parameter lambda),
@@ -67,13 +85,13 @@ def grad_V(Vj, Yij, Ui, Ai, Bj, reg, eta):
     respect to Vj multiplied by eta.
     """
     reg_term = reg * Vj
-    y_diff = Yij - (np.dot(Ui, Vj) + ai + bj)
-    grad = reg_term + y_diff * (-1 * Ui)
-    grad *= eta
+    y_diff = (Yij - mu) - (np.dot(Ui, Vj) + Ai + Bj)
+    grad_V = reg_term + y_diff * (-2 * Ui)
+    grad_V *= eta
 
-    return grad
+    return grad_V
 
-def get_err(U, V, Y, A, B, reg=0.0):
+def get_err(Y, U, V, A, B, reg=0.0):
     """
     Takes as input a matrix Y of triples (i, j, Y_ij) where i is the index of a user,
     j is the index of a movie, and Y_ij is user i's rating of movie j and
@@ -82,8 +100,10 @@ def get_err(U, V, Y, A, B, reg=0.0):
     Returns the root mean regularized squared-error of predictions made by
     estimating Y_{ij} as the dot product of the ith row of U and the jth column of V^T.
     """
+    mu = np.mean(Y[:,2]) 
 
-    reg_term = (reg / 2) * (np.linalg.norm(U, ord='fro')**2 + np.linalg.norm(V, ord='fro')**2)
+    reg_term = ((reg / 2) * (np.linalg.norm(U, ord='fro')**2 + np.linalg.norm(V, ord='fro')**2) 
+        + np.linalg.norm(A)**2 + np.linalg.norm(B)**2)
 
     sq_loss_term = 0
     for k in range(len(Y)):
@@ -96,8 +116,7 @@ def get_err(U, V, Y, A, B, reg=0.0):
         a_i = A[i]
         b_j = B[j]
 
-        sq_loss_term += (Y_pt - (np.dot(U_row, V_col) + a_i + b_j))**2
-    sq_loss_term *= (1/2) 
+        sq_loss_term += ((Y_pt - mu) - (np.dot(U_row, V_col) + a_i + b_j))**2
 
     loss = (reg_term + sq_loss_term) / len(Y)
 
@@ -143,31 +162,39 @@ def train_model(M, N, K, eta, reg, Y, eps=0.0001, max_epochs=300):
     A = initMatrix(M, 1, [-0.5, 0.5]) 
     B = initMatrix(N, 1, [-0.5, 0.5])
 
+    mu = np.mean(Y[:,2])
+
     err = []
-    err.append(get_err(U, V, Y, A, B reg=reg))
+    err.append(get_err(Y, U, V, A, B, reg=reg))
+    print(err[0])
     for i in range(max_epochs):
         print("Epoch {} in max epochs {}".format(i, max_epochs))
         np.random.shuffle(Y) # shuffle the train set before each epoch
         for j in range(len(Y)):
-            row = Y[k][0]-1 # equiv to i, i already exists tho
-            col = Y[k][1]-1 # equiv to j, j already exists tho
+            row = Y[j][0]-1 # equiv to i, i already exists tho
+            col = Y[j][1]-1 # equiv to j, j already exists tho
             # finds the gradient for this U_row and V_col
             Y_pt = Y[j][2]
             U_row = U[row]
             V_col = V[col]
             Ai = A[row]
             Bj = B[col]
-            gradU = grad_U(U_row, Y_pt, V_col, Ai, Bj reg, eta)
-            gradV = grad_V(V_col, Y_pt, U_row, Ai, Bj, reg, eta)
+            gU = grad_U(Y_pt, U_row, V_col, Ai, Bj, mu, reg, eta)
+            gV = grad_V(Y_pt, U_row, V_col, Ai, Bj, mu, reg, eta)
+            gA = grad_A(Y_pt, U_row, V_col, Ai, Bj, mu, reg, eta)
+            gB = grad_B(Y_pt, U_row, V_col, Ai, Bj, mu, reg, eta)
 
-            U[Y[j][0]-1] -= gradU
-            V[Y[j][1]-1] -= gradV
-        this_error = get_err(U, V, Y, reg=reg)
+            U[row] -= gU
+            A[row] -= gA
+            V[col] -= gV
+            B[col] -= gB
+        this_error = get_err(Y, U, V, A, B, reg=reg)
+        print(this_error)
         err.append(this_error)
         if(determine_errordiff_stop(err, eps)):
             break
     err = np.array(err)
-    return (U, V, err[-1])
+    return (U, V, A, B, err[-1])
 
 # main function
 if __name__ == '__main__':
@@ -183,8 +210,10 @@ if __name__ == '__main__':
     eta = 0.03 # learning rate
     
     # Use to compute Ein and Eout
-    U,V, E_in = train_model(M, N, K, eta, reg, Y_train)
-    E_out = get_err(U, V, Y_test)
+    U,V, A, B, E_in = train_model(M, N, K, eta, reg, Y_train)
+    E_out = get_err(Y_test, U, V, A, B)
+
+    print(E_in, E_out)
 
     #Plot random 10 movies
 
