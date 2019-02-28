@@ -19,9 +19,9 @@ def project_movies_2D(V, movie_IDs):
     V_proj = np.matmul(np.transpose(A_v[:, 0:2]), V_T)
 
     # take only the columns corresponding to movie ids. 
-    # movie ids are 1 indexed, so subtract by 1. 
-    movie_IDs -= 1
-    V_proj_specific = V_proj[:, movie_IDs]
+    # movie ids are 1 indexed, so subtract by 1.
+    zero_index_IDs = movie_IDs - 1
+    V_proj_specific = V_proj[:, zero_index_IDs]
 
     return (V_proj_specific[0], V_proj_specific[1])
 
@@ -41,6 +41,31 @@ def make_movie_scatter(X, Y, movie_titles, gentitle, has_legend):
     plt.title(gentitle)
     plt.show()
 
+# make a combo scatter 
+# V is just the V
+# ID_List = [[romance_id], [anime_id], [etc_id]]
+# ID_titles = [genre1, genre2, genre3]
+# gentitle = 'title of the graph'
+def make_combo_scatter(V, ID_List, ID_titles, genTitle):
+
+    plt.figure(1)
+
+    for i in range(len(ID_List)):
+        movie_IDs = ID_List[i] # the list of IDs to project
+        title = ID_titles[i]
+
+        X, Y = project_movies_2D(V, movie_IDs)
+        plt.plot(X, Y, 'o',label=title)
+
+    plt.legend(loc='best')
+    plt.xlabel('V Projection Component 1')
+    plt.ylabel('V Projection Component 2')
+    plt.title(genTitle)
+    # plt.xlim(min(V1_all),max(V1_all))
+    # plt.ylim(min(V2_all),max(V2_all))
+
+    plt.show()
+
 def grad_U(Ui, Yij, Vj, reg, eta):
     """
     Takes as input Ui (the ith row of U), a training point Yij, the column
@@ -50,9 +75,9 @@ def grad_U(Ui, Yij, Vj, reg, eta):
     Returns the gradient of the regularized loss function with
     respect to Ui multiplied by eta.
     """
-    reg_term = reg * Ui
+    reg_term = 2 * reg * Ui
     y_diff = Yij - np.dot(Ui, Vj) 
-    grad = reg_term + y_diff * (-1 * Vj)
+    grad = reg_term + y_diff * (-2 * Vj)
     grad *= eta
 
     return grad
@@ -66,9 +91,9 @@ def grad_V(Vj, Yij, Ui, reg, eta):
     Returns the gradient of the regularized loss function with
     respect to Vj multiplied by eta.
     """
-    reg_term = reg * Vj
+    reg_term = 2 * reg * Vj
     y_diff = Yij - np.dot(Ui, Vj) 
-    grad = reg_term + y_diff * (-1 * Ui)
+    grad = reg_term + y_diff * (-2 * Ui)
     grad *= eta
 
     return grad
@@ -83,16 +108,14 @@ def get_err(U, V, Y, reg=0.0):
     estimating Y_{ij} as the dot product of the ith row of U and the jth column of V^T.
     """
 
-    reg_term = (reg / 2) * (np.linalg.norm(U, ord='fro')**2 + np.linalg.norm(V, ord='fro')**2)
+    reg_term = reg * (np.linalg.norm(U, ord='fro')**2 + np.linalg.norm(V, ord='fro')**2)
 
     sq_loss_term = 0
     for i in range(len(Y)):
         Y_pt = Y[i][2]
         U_row = U[Y[i][0]-1]
         V_col = V[Y[i][1]-1]
-
         sq_loss_term += (Y_pt - np.dot(U_row, V_col))**2
-    sq_loss_term *= (1/2) 
 
     loss = (reg_term + sq_loss_term) / len(Y)
 
@@ -109,7 +132,7 @@ def initMatrix(N, D, interval):
 def determine_errordiff_stop(errors, diff_threshold):
     if(
         len(errors) > 2 and 
-        abs((errors[-2] - errors[-1])) / abs((errors[0] - errors[1])) < diff_threshold
+        (errors[-2] - errors[-1]) / (errors[0] - errors[1]) < diff_threshold
     ):
         print("secondary Stopping condition reached")
         return True
@@ -158,6 +181,70 @@ def train_model(M, N, K, eta, reg, Y, eps=0.0001, max_epochs=300):
     err = np.array(err)
     return (U, V, err[-1])
 
+def makeSixGraphs(V):
+
+    random_IDs = np.array([127,187,64,172,181,50,59,60,61,89])
+    random_titles = ['Godfather Part I','Godfather: Part II','Shawshank Redemption',
+        'Empire Strikes Back','Return of the Jedi','Star Wars','Three Colors: Red',
+        'Three Colors:Blue','Three Colors: White','Blade Runner']
+
+    Anime_ID = np.array([1,71,95,99,101,102,103,2,114,169])
+    Anime_names = ['Toy Story','Lion King','Aladdin','Snow White',
+        'Heavy Metal','Aristocats','All Dogs Go to Heaven 2',
+        'Wallace and Gromit','Wrong Trouser','Grand Day Out, A']
+
+    Scifi_ID = np.array([7,38,39,50,62,82,84,89,96,101])
+    Scifi_names = ['Twelve Monkeys','The Net','Strange Days','Star Wars',
+        'Stargate','Jurassic Park','Robert A Heinleins The Puppet Masters',
+        'Blade Runner','Terminator 2','Heavy Metal']
+
+    Romance_ID = np.array([14,16,20,33,36,49,50,51,55,66])
+    Romance_names = ['Postino, II','French Twist','Angels and Insects',
+        'Desperado','Mad Love','I.Q.','Star Wars','Legends of the Fall',
+        'Professional, The','While You Were Sleeping']
+
+
+    popular_ID = np.array([174, 121, 300, 1, 288, 286, 294, 181, 100, 258])
+    popular_titles = ['Raiders of the Lost Ark (1981)', 'Independence Day (ID4) (1996)', 
+        'Air Force One (1997)', 'Toy Story (1995)', 'Scream (1996)', '"English Patient, The (1996)"', 
+        'Liar Liar (1997)', 'Return of the Jedi (1983)', 'Fargo (1996)', 'Contact (1997)']
+
+    best_rated_ID = np.array([1449, 814, 1122, 1189, 1201, 1293, 1467, 1500, 1536, 1599])
+    best_rated_titles = ['Pather Panchali (1955)', '"Great Day in Harlem, A (1994)"', 
+        'They Made Me a Criminal (1939)', 'Prefontaine (1997)', 'Marlene Dietrich: Shadow and Light (1996) ', 
+        'Star Kid (1997)', '"Saint of Fort Washington, The (1993)"', 'Santa with Muscles (1996)', 
+        'Aiqing wansui (1994)', "Someone Else's America (1995)"]
+
+    V_X, V_Y = project_movies_2D(V, random_IDs)
+    make_movie_scatter(V_X, V_Y, random_titles, '2D V Projection of Ten Movies We Chose', True)
+    make_movie_scatter(V_X, V_Y, random_titles, '2D V Projection of Ten Movies We Chose', False)
+
+    V_X, V_Y = project_movies_2D(V, popular_ID)
+    make_movie_scatter(V_X, V_Y, popular_titles, '2D V Projection of Ten Most Popular Movies', True)
+    make_movie_scatter(V_X, V_Y, popular_titles, '2D V Projection of Ten Most Popular Movies', False)
+
+    V_X, V_Y = project_movies_2D(V, best_rated_ID)
+    make_movie_scatter(V_X, V_Y, best_rated_titles, '2D V Projection of Ten Best Rated Movies', True)
+    make_movie_scatter(V_X, V_Y, best_rated_titles, '2D V Projection of Ten Best Rated Movies', False)
+
+    V_X, V_Y = project_movies_2D(V, Anime_ID)
+    make_movie_scatter(V_X, V_Y, Anime_names, '2D V Projection of Ten Animated Movies', True)
+    make_movie_scatter(V_X, V_Y, Anime_names, '2D V Projection of Ten Animated Movies', False)
+
+    V_X, V_Y = project_movies_2D(V, Scifi_ID)
+    make_movie_scatter(V_X, V_Y, Scifi_names, '2D V Projection of Ten Scifi Movies', True)
+    make_movie_scatter(V_X, V_Y, Scifi_names, '2D V Projection of Ten Scifi Movies', False)
+
+    V_X, V_Y = project_movies_2D(V, Romance_ID)
+    make_movie_scatter(V_X, V_Y, Romance_names, '2D V Projection of Ten Romance Movies', True)
+    make_movie_scatter(V_X, V_Y, Romance_names, '2D V Projection of Ten Romance Movies', False)
+
+    make_combo_scatter(V, [Romance_ID, Scifi_ID, Anime_ID], 
+        ['Romance', 'Scifi', 'Anime'], 'Three Genre Movie Comparison Projection')
+
+    make_combo_scatter(V, [popular_ID, best_rated_ID], 
+        ['Most Popular', 'Best Rated'], 'Best Rated vs. Most Popular Projection')
+
 # main function
 if __name__ == '__main__':
     Y_train = np.loadtxt('data/train.txt').astype(int)
@@ -177,55 +264,6 @@ if __name__ == '__main__':
 
     print(E_in, E_out)
 
-    # random_IDs = np.array([127,187,64,172,181,50,59,60,61,89])
-    # random_titles = ['Godfather Part I','Godfather: Part II','Shawshank Redemption',
-    #     'Empire Strikes Back','Return of the Jedi','Star Wars','Three Colors: Red',
-    #     'Three Colors:Blue','Three Colors: White','Blade Runner']
+    makeSixGraphs(V)
 
-    # Anime_ID = np.array([1,71,95,99,101,102,103,2,114,169])
-    # Anime_names = ['Toy Story','Lion King','Aladdin','Snow White',
-    #     'Heavy Metal','Aristocats','All Dogs Go to Heaven 2',
-    #     'Wallace and Gromit','Wrong Trouser','Grand Day Out, A']
-
-    # Scifi_ID = np.array([7,38,39,50,62,82,84,89,96,101])
-    # Scifi_names = ['Twelve Monkeys','The Net','Strange Days','Star Wars',
-    #     'Stargate','Jurassic Park','Robert A Heinleins The Puppet Masters',
-    #     'Blade Runner','Terminator 2','Heavy Metal']
-
-    # Romance_ID = np.array([14,16,20,33,36,49,50,51,55,66])
-    # Romance_names = ['Postino, II','French Twist','Angels and Insects',
-    #     'Desperado','Mad Love','I.Q.','Star Wars','Legends of the Fall',
-    #     'Professional, The','While You Were Sleeping']
-
-
-    popular_ID = np.array([174, 121, 300, 1, 288, 286, 294, 181, 100, 258])
-    popular_titles = ['Raiders of the Lost Ark (1981)', 'Independence Day (ID4) (1996)', 
-        'Air Force One (1997)', 'Toy Story (1995)', 'Scream (1996)', '"English Patient, The (1996)"', 
-        'Liar Liar (1997)', 'Return of the Jedi (1983)', 'Fargo (1996)', 'Contact (1997)']
-
-    best_rated_ID = np.array([1449, 814, 1122, 1189, 1201, 1293, 1467, 1500, 1536, 1599])
-    best_rated_titles = ['Pather Panchali (1955)', '"Great Day in Harlem, A (1994)"', 
-        'They Made Me a Criminal (1939)', 'Prefontaine (1997)', 'Marlene Dietrich: Shadow and Light (1996) ', 
-        'Star Kid (1997)', '"Saint of Fort Washington, The (1993)"', 'Santa with Muscles (1996)', 
-        'Aiqing wansui (1994)', "Someone Else's America (1995)"]
-
-
-    V_X, V_Y = project_movies_2D(V, popular_ID)
-    make_movie_scatter(V_X, V_Y, popular_titles, '2D V Projection of Ten Most Popular Movies', True)
-    make_movie_scatter(V_X, V_Y, popular_titles, '2D V Projection of Ten Most Popular Movies', False)
-
-    V_X, V_Y = project_movies_2D(V, best_rated_ID)
-    make_movie_scatter(V_X, V_Y, best_rated_titles, '2D V Projection of Ten Best Rated Movies', True)
-    make_movie_scatter(V_X, V_Y, best_rated_titles, '2D V Projection of Ten Best Rated Movies', False)
-
-    # V_X, V_Y = project_movies_2D(V, Anime_ID)
-    # make_movie_scatter(V_X, V_Y, Anime_names, '2D V Projection of Ten Animated Movies', True)
-    # make_movie_scatter(V_X, V_Y, Anime_names, '2D V Projection of Ten Animated Movies', False)
-
-    # V_X, V_Y = project_movies_2D(V, Scifi_ID)
-    # make_movie_scatter(V_X, V_Y, Scifi_names, '2D V Projection of Ten Scifi Movies', True)
-    # make_movie_scatter(V_X, V_Y, Scifi_names, '2D V Projection of Ten Scifi Movies', False)
-
-    # V_X, V_Y = project_movies_2D(V, Romance_ID)
-    # make_movie_scatter(V_X, V_Y, Romance_names, '2D V Projection of Ten Romance Movies', True)
-    # make_movie_scatter(V_X, V_Y, Romance_names, '2D V Projection of Ten Romance Movies', False)
+    
